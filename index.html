@@ -213,12 +213,18 @@
       padding: 8px;
       cursor: pointer;
       text-align: left;
-      transition: transform 0.16s ease, background 0.16s ease;
+      transition: transform 0.16s ease, background 0.16s ease, outline-color 0.16s ease;
+      outline: 1px solid transparent;
     }
 
     .track-card:hover {
       transform: translateY(-2px);
       background: rgba(255, 255, 255, 0.38);
+    }
+
+    .track-card.active {
+      outline: 1px solid rgba(30, 215, 96, 0.45);
+      background: rgba(255, 255, 255, 0.34);
     }
 
     .track-card img {
@@ -529,8 +535,8 @@
           <span></span><span></span><span></span>
         </div>
         <div class="brand-copy">
-          <div class="brand-title">Spotify Recents</div>
-          <div class="brand-subtitle" id="brand-subtitle">Log in to load recently played tracks</div>
+          <div class="brand-title">Spotify Library</div>
+          <div class="brand-subtitle" id="brand-subtitle">Connect Spotify to load playlists and albums</div>
         </div>
       </div>
 
@@ -545,8 +551,8 @@
       <div class="recent-shell" id="recent-shell">
         <div class="recent-pane">
           <div>
-            <div class="section-title">Recently played</div>
-            <div class="section-note">Click a cover to fly it to the top-left player and start playback.</div>
+            <div class="section-title">Playlists & Albums</div>
+            <div class="section-note">If Spotify is already playing, this panel opens that session automatically.</div>
           </div>
           <div class="recent-grid" id="recent-grid">
             <div class="empty-state">Connect Spotify first.</div>
@@ -560,8 +566,8 @@
             </div>
 
             <div class="mini-meta">
-              <div class="now-title" id="now-title">Pick a recently played track</div>
-              <div class="now-artist" id="now-artist">Playback controls will appear here.</div>
+              <div class="now-title" id="now-title">Nothing playing right now</div>
+              <div class="now-artist" id="now-artist">Choose a playlist or album to start playback.</div>
 
               <div class="controls">
                 <button class="icon-btn" id="prev-btn" title="Previous">⏮</button>
@@ -579,7 +585,9 @@
             </div>
           </div>
 
-          <div class="detail-list" id="detail-list"></div>
+          <div class="detail-list" id="detail-list">
+            <div class="empty-state">Choose a playlist or album, or let the panel sync to current playback.</div>
+          </div>
         </div>
       </div>
     </div>
@@ -593,7 +601,9 @@
       'streaming',
       'user-read-email',
       'user-read-private',
-      'user-read-recently-played',
+      'playlist-read-private',
+      'playlist-read-collaborative',
+      'user-library-read',
       'user-read-playback-state',
       'user-modify-playback-state',
       'user-read-currently-playing'
@@ -628,9 +638,12 @@
     let spotifyReadyPromise = null;
     let spotifyReadyResolve = null;
 
-    let recentTracks = [];
-    let selectedTrack = null;
+    let libraryItems = [];
+    let contextTracks = [];
+    let selectedCollection = null;
+    let currentTrackId = null;
     let currentState = null;
+    let playbackPoll = null;
 
     let ticking = null;
     let tickingStartedAt = 0;
@@ -827,101 +840,6 @@
       return res.json();
     }
 
-    function uniqueRecentTracks(items) {
-      const seen = new Set();
-      const out = [];
-
-      for (const item of items || []) {
-        const track = item.track;
-        if (!track?.id) continue;
-        if (seen.has(track.id)) continue;
-        seen.add(track.id);
-        out.push({
-          id: track.id,
-          uri: track.uri,
-          name: track.name,
-          artists: (track.artists || []).map(a => a.name).join(', '),
-          album: track.album?.name || '',
-          image: track.album?.images?.[0]?.url || '',
-          duration_ms: track.duration_ms || 0,
-          played_at: item.played_at
-        });
-      }
-
-      return out;
-    }
-
-    async function loadRecentlyPlayed() {
-      setStatus('Loading...');
-      const data = await spotifyFetch('/me/player/recently-played?limit=24');
-      recentTracks = uniqueRecentTracks(data?.items || []);
-      renderRecentGrid();
-      renderDetailList();
-      setStatus('Connected');
-      setSubtitle(`Loaded ${recentTracks.length} recent tracks`);
-    }
-
-    function formatMs(ms) {
-      const total = Math.max(0, Math.floor(ms / 1000));
-      const m = Math.floor(total / 60);
-      const s = String(total % 60).padStart(2, '0');
-      return `${m}:${s}`;
-    }
-
-    function formatPlayedAt(iso) {
-      if (!iso) return '';
-      const d = new Date(iso);
-      const hh = String(d.getHours()).padStart(2, '0');
-      const mm = String(d.getMinutes()).padStart(2, '0');
-      return `${hh}:${mm}`;
-    }
-
-    function renderRecentGrid() {
-      if (!recentTracks.length) {
-        recentGrid.innerHTML = '<div class="empty-state">No recently played tracks were returned.</div>';
-        return;
-      }
-
-      recentGrid.innerHTML = '';
-      for (const track of recentTracks) {
-        const btn = document.createElement('button');
-        btn.className = 'track-card';
-        btn.type = 'button';
-        btn.dataset.trackId = track.id;
-        btn.innerHTML = `
-          <img src="${track.image}" alt="${escapeHtml(track.name)}" />
-          <div class="track-card-title">${escapeHtml(track.name)}</div>
-          <div class="track-card-artist">${escapeHtml(track.artists)}</div>
-        `;
-        btn.addEventListener('click', (e) => handleTrackClick(track, btn, e));
-        recentGrid.appendChild(btn);
-      }
-    }
-
-    function renderDetailList() {
-      if (!recentTracks.length) {
-        detailList.innerHTML = '';
-        return;
-      }
-
-      detailList.innerHTML = '';
-      for (const track of recentTracks) {
-        const item = document.createElement('button');
-        item.className = `detail-item${selectedTrack?.id === track.id ? ' active' : ''}`;
-        item.type = 'button';
-        item.innerHTML = `
-          <img src="${track.image}" alt="${escapeHtml(track.name)}" />
-          <div class="detail-item-copy">
-            <div class="detail-item-title">${escapeHtml(track.name)}</div>
-            <div class="detail-item-artist">${escapeHtml(track.artists)}</div>
-          </div>
-          <div class="detail-item-time">${formatPlayedAt(track.played_at)}</div>
-        `;
-        item.addEventListener('click', (e) => handleTrackClick(track, item, e));
-        detailList.appendChild(item);
-      }
-    }
-
     function escapeHtml(text) {
       return String(text)
         .replaceAll('&', '&amp;')
@@ -931,8 +849,133 @@
         .replaceAll("'", '&#39;');
     }
 
+    function formatMs(ms) {
+      const total = Math.max(0, Math.floor(ms / 1000));
+      const m = Math.floor(total / 60);
+      const s = String(total % 60).padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
     function ensureOpen() {
       recentShell.classList.add('is-open');
+    }
+
+    function updateProgressUi(position, duration) {
+      const safeDuration = Math.max(0, duration || 0);
+      const safePosition = Math.max(0, Math.min(position || 0, safeDuration || 0));
+
+      currentTimeEl.textContent = formatMs(safePosition);
+      durationTimeEl.textContent = formatMs(safeDuration);
+
+      progressBar.max = String(Math.max(1, safeDuration));
+      if (!isScrubbing) {
+        progressBar.value = String(safePosition);
+      }
+    }
+
+    function syncPlayButton() {
+      const paused = currentState?.paused ?? true;
+      playBtn.textContent = paused ? '▶' : '⏸';
+    }
+
+    function startTicker() {
+      if (ticking) clearInterval(ticking);
+
+      ticking = setInterval(() => {
+        if (progressPaused || isScrubbing) return;
+        const elapsed = Date.now() - tickingStartedAt;
+        updateProgressUi(progressBase + elapsed, progressDuration);
+      }, 250);
+    }
+
+    function normalizePlaylist(playlist) {
+      return {
+        kind: 'playlist',
+        typeLabel: 'Playlist',
+        id: playlist.id,
+        contextUri: playlist.uri,
+        name: playlist.name,
+        subtitle: `${playlist.owner?.display_name || 'Spotify'} • ${playlist.tracks?.total || 0} songs`,
+        image: playlist.images?.[0]?.url || '',
+        totalTracks: playlist.tracks?.total || 0
+      };
+    }
+
+    function normalizeAlbum(savedAlbum) {
+      const album = savedAlbum.album || savedAlbum;
+      const artistLine = (album.artists || []).map((a) => a.name).join(', ');
+      const year = album.release_date ? String(album.release_date).slice(0, 4) : '';
+      return {
+        kind: 'album',
+        typeLabel: 'Album',
+        id: album.id,
+        contextUri: album.uri,
+        name: album.name,
+        subtitle: [artistLine, year].filter(Boolean).join(' • '),
+        image: album.images?.[0]?.url || '',
+        totalTracks: album.total_tracks || album.tracks?.total || 0
+      };
+    }
+
+    function mergeLibraryItem(item) {
+      const idx = libraryItems.findIndex((x) => x.contextUri === item.contextUri);
+      if (idx >= 0) {
+        libraryItems[idx] = item;
+      } else {
+        libraryItems.unshift(item);
+      }
+    }
+
+    function renderLibraryGrid() {
+      if (!libraryItems.length) {
+        recentGrid.innerHTML = '<div class="empty-state">No playlists or saved albums were returned.</div>';
+        return;
+      }
+
+      recentGrid.innerHTML = '';
+
+      for (const item of libraryItems) {
+        const btn = document.createElement('button');
+        btn.className = `track-card${selectedCollection?.contextUri === item.contextUri ? ' active' : ''}`;
+        btn.type = 'button';
+        btn.innerHTML = `
+          <img src="${item.image}" alt="${escapeHtml(item.name)}" />
+          <div class="track-card-title">${escapeHtml(item.name)}</div>
+          <div class="track-card-artist">${escapeHtml(item.typeLabel)} • ${escapeHtml(item.subtitle)}</div>
+        `;
+        btn.addEventListener('click', () => handleCollectionClick(item, btn));
+        recentGrid.appendChild(btn);
+      }
+    }
+
+    function renderDetailList() {
+      if (!selectedCollection) {
+        detailList.innerHTML = '<div class="empty-state">Choose a playlist or album, or let the panel sync to your current playback.</div>';
+        return;
+      }
+
+      if (!contextTracks.length) {
+        detailList.innerHTML = `<div class="empty-state">${escapeHtml(selectedCollection.name)} loaded, but track details are not available yet.</div>`;
+        return;
+      }
+
+      detailList.innerHTML = '';
+
+      for (const track of contextTracks) {
+        const item = document.createElement('button');
+        item.className = `detail-item${currentTrackId === track.id ? ' active' : ''}`;
+        item.type = 'button';
+        item.innerHTML = `
+          <img src="${track.image}" alt="${escapeHtml(track.name)}" />
+          <div class="detail-item-copy">
+            <div class="detail-item-title">${escapeHtml(track.name)}</div>
+            <div class="detail-item-artist">${escapeHtml(track.artists)}</div>
+          </div>
+          <div class="detail-item-time">${formatMs(track.duration_ms)}</div>
+        `;
+        item.addEventListener('click', () => playCollection(selectedCollection, track.position));
+        detailList.appendChild(item);
+      }
     }
 
     async function animateCoverToMini(sourceEl, imageUrl) {
@@ -973,11 +1016,21 @@
       miniCover.classList.add('ready');
     }
 
-    function fillMini(track) {
-      selectedTrack = track;
-      nowTitle.textContent = track?.name || 'Pick a recently played track';
-      nowArtist.textContent = track?.artists || 'Playback controls will appear here.';
-      miniCover.src = track?.image || '';
+    function fillMiniFromCollection(item) {
+      selectedCollection = item;
+      nowTitle.textContent = item?.name || 'Nothing playing right now';
+      nowArtist.textContent = item ? `${item.typeLabel} • ${item.subtitle}` : 'Choose a playlist or album to start playback.';
+      miniCover.src = item?.image || '';
+      miniCover.classList.add('ready');
+      renderLibraryGrid();
+      renderDetailList();
+    }
+
+    function fillMiniFromPlaybackItem(track) {
+      currentTrackId = track?.id || null;
+      nowTitle.textContent = track?.name || 'Nothing playing right now';
+      nowArtist.textContent = track?.artists?.map((a) => a.name).join(', ') || 'Choose a playlist or album to start playback.';
+      miniCover.src = track?.album?.images?.[0]?.url || '';
       miniCover.classList.add('ready');
       renderDetailList();
     }
@@ -1037,7 +1090,7 @@
 
       spotifyPlayer.addListener('autoplay_failed', () => {
         setStatus('Autoplay blocked');
-        setSubtitle('Click a track again to activate playback');
+        setSubtitle('Click a playlist or album again to activate playback');
       });
 
       spotifyPlayer.addListener('player_state_changed', (state) => {
@@ -1047,12 +1100,7 @@
 
         const currentTrack = state.track_window?.current_track;
         if (currentTrack) {
-          nowTitle.textContent = currentTrack.name || '';
-          nowArtist.textContent = (currentTrack.artists || []).map(a => a.name).join(', ');
-          if (currentTrack.album?.images?.[0]?.url) {
-            miniCover.src = currentTrack.album.images[0].url;
-            miniCover.classList.add('ready');
-          }
+          fillMiniFromPlaybackItem(currentTrack);
         }
 
         progressBase = state.position || 0;
@@ -1080,13 +1128,8 @@
         await spotifyPlayer.activateElement().catch(() => {});
       }
 
-      const token = await getValidAccessToken();
-      await fetch('https://api.spotify.com/v1/me/player', {
+      await spotifyFetch('/me/player', {
         method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify({
           device_ids: [spotifyDeviceId],
           play: false
@@ -1094,33 +1137,129 @@
       });
     }
 
-    async function playTrack(track) {
-      await ensurePlaybackDeviceActivated();
+    async function fetchContextMeta(contextUri) {
+      if (!contextUri) return null;
+      const parts = contextUri.split(':');
+      const kind = parts[1];
+      const id = parts[2];
 
-      const token = await getValidAccessToken();
-      const res = await fetch(`https://api.spotify.com/v1/me/player/play?device_id=${encodeURIComponent(spotifyDeviceId)}`, {
+      if (!kind || !id) return null;
+
+      if (kind === 'playlist') {
+        const playlist = await spotifyFetch(`/playlists/${id}?fields=id,name,uri,images,owner(display_name),tracks(total)`);
+        return normalizePlaylist(playlist);
+      }
+
+      if (kind === 'album') {
+        const album = await spotifyFetch(`/albums/${id}`);
+        return normalizeAlbum(album);
+      }
+
+      return null;
+    }
+
+    async function loadLibrary() {
+      setStatus('Loading library');
+
+      const [playlistsResult, albumsResult] = await Promise.allSettled([
+        spotifyFetch('/me/playlists?limit=12'),
+        spotifyFetch('/me/albums?limit=12')
+      ]);
+
+      const playlists = playlistsResult.status === 'fulfilled'
+        ? (playlistsResult.value?.items || []).map(normalizePlaylist)
+        : [];
+
+      const albums = albumsResult.status === 'fulfilled'
+        ? (albumsResult.value?.items || []).map(normalizeAlbum)
+        : [];
+
+      const merged = [];
+      const seen = new Set();
+
+      for (const item of [...playlists, ...albums, ...libraryItems]) {
+        if (!item?.contextUri || seen.has(item.contextUri)) continue;
+        seen.add(item.contextUri);
+        merged.push(item);
+      }
+
+      libraryItems = merged;
+      renderLibraryGrid();
+      renderDetailList();
+      setStatus('Connected');
+      setSubtitle(`Loaded ${libraryItems.length} playlists/albums`);
+    }
+
+    async function loadContextTracks(item) {
+      if (!item) {
+        contextTracks = [];
+        renderDetailList();
+        return;
+      }
+
+      if (item.kind === 'playlist') {
+        const data = await spotifyFetch(`/playlists/${item.id}/tracks?limit=50`);
+        contextTracks = (data?.items || [])
+          .map((row, index) => {
+            const track = row.track;
+            if (!track?.id) return null;
+            return {
+              id: track.id,
+              name: track.name,
+              artists: (track.artists || []).map((a) => a.name).join(', '),
+              duration_ms: track.duration_ms || 0,
+              image: track.album?.images?.[0]?.url || item.image,
+              position: index
+            };
+          })
+          .filter(Boolean);
+      } else if (item.kind === 'album') {
+        const data = await spotifyFetch(`/albums/${item.id}/tracks?limit=50`);
+        contextTracks = (data?.items || []).map((track, index) => ({
+          id: track.id,
+          name: track.name,
+          artists: (track.artists || []).map((a) => a.name).join(', '),
+          duration_ms: track.duration_ms || 0,
+          image: item.image,
+          position: index
+        }));
+      } else {
+        contextTracks = [];
+      }
+
+      renderDetailList();
+    }
+
+    async function playCollection(item, startIndex = 0) {
+      await ensurePlaybackDeviceActivated();
+      selectedCollection = item;
+      fillMiniFromCollection(item);
+      ensureOpen();
+
+      await loadContextTracks(item);
+
+      await spotifyFetch(`/me/player/play?device_id=${encodeURIComponent(spotifyDeviceId)}`, {
         method: 'PUT',
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json'
-        },
         body: JSON.stringify({
-          uris: [track.uri],
+          context_uri: item.contextUri,
+          offset: { position: startIndex },
           position_ms: 0
         })
       });
 
-      if (!res.ok && res.status !== 204) {
-        const text = await res.text();
-        throw new Error(text || 'Failed to start playback');
-      }
+      setStatus('Playing');
+      setSubtitle(`${item.typeLabel} • ${item.name}`);
+
+      setTimeout(() => {
+        syncFromPlayback(true).catch(console.error);
+      }, 450);
     }
 
-    async function handleTrackClick(track, clickedEl) {
+    async function handleCollectionClick(item, clickedEl) {
       try {
-        fillMini(track);
-        await animateCoverToMini(clickedEl, track.image);
-        await playTrack(track);
+        fillMiniFromCollection(item);
+        await animateCoverToMini(clickedEl, item.image);
+        await playCollection(item, 0);
       } catch (err) {
         console.error(err);
         setStatus('Playback failed');
@@ -1128,38 +1267,95 @@
       }
     }
 
-    function updateProgressUi(position, duration) {
-      const safeDuration = Math.max(0, duration || 0);
-      const safePosition = Math.max(0, Math.min(position || 0, safeDuration || 0));
+    async function syncFromPlayback(forceContextReload = false) {
+      const playback = await spotifyFetch('/me/player');
 
-      currentTimeEl.textContent = formatMs(safePosition);
-      durationTimeEl.textContent = formatMs(safeDuration);
-
-      progressBar.max = String(Math.max(1, safeDuration));
-      if (!isScrubbing) {
-        progressBar.value = String(safePosition);
+      if (!playback?.item) {
+        currentState = { paused: true };
+        progressPaused = true;
+        syncPlayButton();
+        return null;
       }
+
+      ensureOpen();
+
+      currentTrackId = playback.item.id || null;
+      currentState = { paused: !playback.is_playing };
+      progressBase = playback.progress_ms || 0;
+      progressDuration = playback.item.duration_ms || 0;
+      progressPaused = !playback.is_playing;
+      tickingStartedAt = Date.now();
+
+      updateProgressUi(progressBase, progressDuration);
+      syncPlayButton();
+      fillMiniFromPlaybackItem(playback.item);
+
+      const contextUri = playback.context?.uri || null;
+
+      if (contextUri && (forceContextReload || selectedCollection?.contextUri !== contextUri)) {
+        let item = libraryItems.find((x) => x.contextUri === contextUri) || null;
+
+        if (!item) {
+          item = await fetchContextMeta(contextUri);
+          if (item) mergeLibraryItem(item);
+        }
+
+        if (item) {
+          selectedCollection = item;
+          renderLibraryGrid();
+          await loadContextTracks(item);
+        }
+      } else {
+        renderDetailList();
+      }
+
+      setStatus(playback.is_playing ? 'Playing' : 'Paused');
+      setSubtitle(selectedCollection ? `${selectedCollection.typeLabel} • ${selectedCollection.name}` : 'Synced to current playback');
+      return playback;
     }
 
-    function startTicker() {
-      if (ticking) clearInterval(ticking);
-
-      ticking = setInterval(() => {
-        if (progressPaused || isScrubbing) return;
-        const elapsed = Date.now() - tickingStartedAt;
-        updateProgressUi(progressBase + elapsed, progressDuration);
-      }, 250);
+    function startPlaybackPolling() {
+      if (playbackPoll) clearInterval(playbackPoll);
+      playbackPoll = setInterval(() => {
+        syncFromPlayback(false).catch(() => {});
+      }, 5000);
     }
 
-    function syncPlayButton() {
-      const paused = currentState?.paused ?? true;
-      playBtn.textContent = paused ? '▶' : '⏸';
+    async function togglePlayback() {
+      const playback = await spotifyFetch('/me/player');
+
+      if (playback?.is_playing) {
+        await spotifyFetch('/me/player/pause', { method: 'PUT' });
+        currentState = { paused: true };
+        progressPaused = true;
+        syncPlayButton();
+        setStatus('Paused');
+        return;
+      }
+
+      if (selectedCollection) {
+        await playCollection(selectedCollection, 0);
+        return;
+      }
+
+      await spotifyFetch('/me/player/play', { method: 'PUT' });
+      setTimeout(() => {
+        syncFromPlayback(false).catch(console.error);
+      }, 300);
     }
 
-    async function bootstrapAfterLogin() {
-      await loadRecentlyPlayed();
-      await initSpotifyPlayer();
-      startTicker();
+    async function skipPrevious() {
+      await spotifyFetch('/me/player/previous', { method: 'POST' });
+      setTimeout(() => {
+        syncFromPlayback(false).catch(console.error);
+      }, 300);
+    }
+
+    async function skipNext() {
+      await spotifyFetch('/me/player/next', { method: 'POST' });
+      setTimeout(() => {
+        syncFromPlayback(false).catch(console.error);
+      }, 300);
     }
 
     loginBtn.addEventListener('click', loginSpotify);
@@ -1169,19 +1365,16 @@
       location.href = REDIRECT_URI;
     });
 
-    playBtn.addEventListener('click', async () => {
-      if (!spotifyPlayer) return;
-      await spotifyPlayer.togglePlay();
+    playBtn.addEventListener('click', () => {
+      togglePlayback().catch(console.error);
     });
 
-    prevBtn.addEventListener('click', async () => {
-      if (!spotifyPlayer) return;
-      await spotifyPlayer.previousTrack();
+    prevBtn.addEventListener('click', () => {
+      skipPrevious().catch(console.error);
     });
 
-    nextBtn.addEventListener('click', async () => {
-      if (!spotifyPlayer) return;
-      await spotifyPlayer.nextTrack();
+    nextBtn.addEventListener('click', () => {
+      skipNext().catch(console.error);
     });
 
     progressBar.addEventListener('input', () => {
@@ -1190,10 +1383,12 @@
     });
 
     progressBar.addEventListener('change', async () => {
-      if (!spotifyPlayer) return;
       const target = Number(progressBar.value);
-      await spotifyPlayer.seek(target);
+      await spotifyFetch(`/me/player/seek?position_ms=${target}`, { method: 'PUT' });
       isScrubbing = false;
+      setTimeout(() => {
+        syncFromPlayback(false).catch(console.error);
+      }, 150);
     });
 
     progressBar.addEventListener('mouseup', () => {
@@ -1204,6 +1399,18 @@
       isScrubbing = false;
     });
 
+    document.addEventListener('visibilitychange', () => {
+      if (!document.hidden) {
+        loadLibrary().catch(() => {});
+        syncFromPlayback(false).catch(() => {});
+      }
+    });
+
+    window.addEventListener('focus', () => {
+      loadLibrary().catch(() => {});
+      syncFromPlayback(false).catch(() => {});
+    });
+
     (async function init() {
       try {
         setStatus('Checking auth');
@@ -1212,13 +1419,17 @@
         const auth = getAuth();
         if (!auth?.access_token) {
           setStatus('Not connected');
-          setSubtitle('Add your Client ID, then connect Spotify');
+          setSubtitle('Connect Spotify to load playlists and albums');
           return;
         }
 
         setStatus('Connected');
         setSubtitle('Initializing player...');
-        await bootstrapAfterLogin();
+        await initSpotifyPlayer();
+        await loadLibrary();
+        await syncFromPlayback(true).catch(() => null);
+        startTicker();
+        startPlaybackPolling();
       } catch (err) {
         console.error(err);
         setStatus('Init failed');
