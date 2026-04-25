@@ -3,12 +3,13 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
   <title>Spotify Status</title>
 
   <style>
     :root {
       --bg: rgba(182, 220, 255, 0.92);
-      --panel: rgba(231, 242, 255, 0.72);
+      --panel: rgba(231, 242, 255, 0.68);
       --line: rgba(255, 255, 255, 0.34);
       --text: rgba(53, 73, 92, 0.98);
       --muted: rgba(79, 96, 114, 0.82);
@@ -16,9 +17,9 @@
       --btn: rgba(86, 156, 234, 0.82);
       --btn-hover: rgba(68, 138, 220, 0.95);
       --danger: rgba(220, 80, 80, 0.9);
-      --shadow: 0 10px 24px rgba(0, 0, 0, 0.10);
+      --shadow: 0 8px 18px rgba(0, 0, 0, 0.10);
 
-      --cover-size: clamp(76px, 22vh, 180px);
+      --cover-size: 82px;
     }
 
     * {
@@ -32,47 +33,56 @@
       width: 100%;
       height: 100%;
       overflow: hidden;
-      font-family: "Segoe UI", "Inter", Arial, sans-serif;
       background: transparent;
       color: var(--text);
+      font-family: "Segoe UI", "Inter", Arial, sans-serif;
     }
 
     body {
-      padding: 12px;
+      padding: 6px;
     }
 
     .spotify-app {
       width: 100%;
       height: 100%;
+      min-width: 0;
+      min-height: 0;
+
       background: var(--bg);
       border: 1px solid var(--line);
-      border-radius: 28px;
+      border-radius: 20px;
       box-shadow: var(--shadow);
+
       display: grid;
-      grid-template-rows: auto 1fr;
-      gap: 10px;
-      padding: 14px;
+      grid-template-rows: 28px minmax(0, 1fr);
+      gap: 6px;
+
+      padding: 8px;
       overflow: hidden;
     }
 
     .topbar {
+      min-height: 0;
+      height: 28px;
+
       display: flex;
       align-items: center;
       justify-content: space-between;
-      gap: 12px;
-      min-height: 42px;
+      gap: 8px;
+
+      overflow: hidden;
     }
 
     .brand {
+      min-width: 0;
       display: flex;
       align-items: center;
-      gap: 10px;
-      min-width: 0;
+      gap: 7px;
     }
 
     .brand-mark {
-      width: 30px;
-      height: 30px;
+      width: 22px;
+      height: 22px;
       border-radius: 999px;
       background: var(--accent);
       position: relative;
@@ -111,38 +121,39 @@
 
     .brand-copy {
       min-width: 0;
+      overflow: hidden;
     }
 
     .brand-title {
-      font-size: 15px;
-      font-weight: 800;
-      line-height: 1.05;
-      white-space: nowrap;
-    }
-
-    .brand-subtitle {
-      margin-top: 3px;
       font-size: 11px;
-      color: var(--muted);
+      font-weight: 800;
+      line-height: 1;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
+    .brand-subtitle {
+      display: none;
+    }
+
     .topbar-actions {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 5px;
       flex: 0 0 auto;
+      min-width: 0;
     }
 
     .status-pill {
-      height: 30px;
-      padding: 0 10px;
+      height: 22px;
+      padding: 0 7px;
       border-radius: 999px;
       background: rgba(255, 255, 255, 0.24);
       color: var(--muted);
-      font-size: 11px;
+      font-size: 9px;
+      font-weight: 700;
+
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -150,15 +161,18 @@
     }
 
     .btn {
-      height: 34px;
-      padding: 0 12px;
+      height: 22px;
+      padding: 0 8px;
       border: none;
-      border-radius: 11px;
+      border-radius: 8px;
+
       background: var(--btn);
       color: white;
-      font-size: 12px;
+
+      font-size: 9px;
       font-weight: 800;
       cursor: pointer;
+
       transition: 0.15s ease;
       white-space: nowrap;
     }
@@ -178,27 +192,31 @@
     }
 
     .main {
+      min-width: 0;
       min-height: 0;
+
       background: var(--panel);
       border: 1px solid rgba(255, 255, 255, 0.26);
-      border-radius: 22px;
+      border-radius: 16px;
 
       display: grid;
       grid-template-columns: var(--cover-size) minmax(0, 1fr);
-      gap: 18px;
+      gap: 10px;
       align-items: center;
 
-      padding: 20px;
+      padding: 10px;
       overflow: hidden;
     }
 
     .cover {
       width: var(--cover-size);
       height: var(--cover-size);
-      border-radius: 22px;
+      border-radius: 13px;
+
       object-fit: cover;
       background: rgba(255, 255, 255, 0.26);
-      box-shadow: 0 12px 28px rgba(0, 0, 0, 0.12);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+
       opacity: 0;
       transition: opacity 0.2s ease;
     }
@@ -209,19 +227,25 @@
 
     .track {
       min-width: 0;
+      overflow: hidden;
     }
 
     .state-line {
-      font-size: 12px;
+      font-size: 9px;
       font-weight: 800;
+      line-height: 1;
       color: var(--muted);
-      margin-bottom: 8px;
+      margin-bottom: 5px;
+
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
 
     .title {
-      font-size: clamp(16px, 3.2vh, 24px);
+      font-size: 15px;
       font-weight: 900;
-      line-height: 1.16;
+      line-height: 1.08;
 
       display: -webkit-box;
       -webkit-line-clamp: 2;
@@ -232,291 +256,199 @@
     }
 
     .artist {
-      margin-top: 8px;
-      font-size: clamp(12px, 2.1vh, 15px);
+      margin-top: 5px;
+      font-size: 11px;
+      line-height: 1.15;
       color: var(--muted);
+
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
     }
 
     .album {
-      margin-top: 4px;
-      font-size: clamp(10px, 1.8vh, 12px);
-      color: var(--muted);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
+      display: none;
     }
 
     .progress-wrap {
-      margin-top: 18px;
+      margin-top: 8px;
       width: 100%;
     }
 
     .progress-row {
       display: grid;
-      grid-template-columns: 42px 1fr 42px;
-      gap: 10px;
+      grid-template-columns: 30px minmax(0, 1fr) 30px;
+      gap: 6px;
       align-items: center;
     }
 
     .time {
-      font-size: 11px;
+      font-size: 8px;
       color: var(--muted);
       font-variant-numeric: tabular-nums;
       text-align: center;
+      line-height: 1;
     }
 
     input[type="range"] {
       -webkit-appearance: none;
       appearance: none;
+
       width: 100%;
-      height: 6px;
+      height: 5px;
       border-radius: 999px;
       background: rgba(255, 255, 255, 0.45);
+
       pointer-events: none;
     }
 
     input[type="range"]::-webkit-slider-thumb {
       -webkit-appearance: none;
       appearance: none;
-      width: 12px;
-      height: 12px;
+
+      width: 10px;
+      height: 10px;
       border-radius: 999px;
       background: rgba(68, 138, 220, 1);
       border: none;
     }
 
     input[type="range"]::-moz-range-thumb {
-      width: 12px;
-      height: 12px;
+      width: 10px;
+      height: 10px;
       border-radius: 999px;
       background: rgba(68, 138, 220, 1);
       border: none;
     }
 
     /*
-      Compact iframe mode.
-      This is the important part for your wallpaper embedding.
-      It only changes the inner Spotify page when iframe height is small.
+      Ultra narrow mode.
+      This handles thin side panels or iframe widths below 330px.
     */
-    @media (max-height: 260px) {
+    @media (max-width: 330px) {
+      :root {
+        --cover-size: 64px;
+      }
+
       body {
-        padding: 8px;
+        padding: 5px;
       }
 
       .spotify-app {
-        border-radius: 22px;
-        padding: 10px;
-        gap: 8px;
-      }
-
-      .topbar {
-        min-height: 30px;
-      }
-
-      .brand {
-        gap: 8px;
-      }
-
-      .brand-mark {
-        width: 24px;
-        height: 24px;
-      }
-
-      .brand-title {
-        font-size: 12px;
-      }
-
-      .brand-subtitle {
-        font-size: 9px;
-        margin-top: 2px;
-      }
-
-      .topbar-actions {
-        gap: 6px;
-      }
-
-      .status-pill {
-        height: 24px;
-        padding: 0 8px;
-        font-size: 10px;
-      }
-
-      .btn {
-        height: 26px;
-        padding: 0 9px;
-        font-size: 10px;
-        border-radius: 9px;
-      }
-
-      .main {
-        grid-template-columns: 86px minmax(0, 1fr);
-        gap: 12px;
-        padding: 12px;
+        padding: 7px;
+        gap: 5px;
         border-radius: 18px;
       }
 
-      .cover {
-        width: 86px;
-        height: 86px;
+      .main {
+        grid-template-columns: var(--cover-size) minmax(0, 1fr);
+        gap: 8px;
+        padding: 8px;
         border-radius: 14px;
       }
 
-      .state-line {
-        font-size: 10px;
-        margin-bottom: 5px;
-      }
-
-      .title {
-        font-size: 17px;
-        line-height: 1.08;
-        -webkit-line-clamp: 2;
-      }
-
-      .artist {
-        margin-top: 5px;
-        font-size: 12px;
-      }
-
-      .album {
-        display: none;
-      }
-
-      .progress-wrap {
-        margin-top: 10px;
-      }
-
-      .progress-row {
-        grid-template-columns: 34px 1fr 34px;
-        gap: 7px;
-      }
-
-      .time {
-        font-size: 9px;
-      }
-    }
-
-    /*
-      Extra-small iframe mode.
-      If your wallpaper card is even shorter, this prevents overflow.
-    */
-    @media (max-height: 210px) {
-      body {
-        padding: 6px;
-      }
-
-      .spotify-app {
-        padding: 8px;
-        gap: 6px;
-        border-radius: 20px;
-      }
-
-      .topbar {
-        min-height: 26px;
-      }
-
       .brand-mark {
-        width: 22px;
-        height: 22px;
+        width: 20px;
+        height: 20px;
       }
 
       .brand-title {
-        font-size: 11px;
-      }
-
-      .brand-subtitle {
-        display: none;
+        font-size: 10px;
       }
 
       .status-pill {
-        height: 22px;
-        font-size: 9px;
-        padding: 0 7px;
+        display: none;
       }
 
       .btn {
-        height: 23px;
-        padding: 0 8px;
-        font-size: 9px;
-        border-radius: 8px;
-      }
-
-      .main {
-        grid-template-columns: 72px minmax(0, 1fr);
-        gap: 10px;
-        padding: 10px;
-        border-radius: 16px;
-      }
-
-      .cover {
-        width: 72px;
-        height: 72px;
-        border-radius: 13px;
-      }
-
-      .state-line {
-        font-size: 9px;
-        margin-bottom: 4px;
+        height: 21px;
+        padding: 0 7px;
+        font-size: 8px;
       }
 
       .title {
-        font-size: 15px;
+        font-size: 13px;
         line-height: 1.06;
       }
 
       .artist {
+        font-size: 10px;
         margin-top: 4px;
-        font-size: 11px;
       }
 
       .progress-wrap {
-        margin-top: 7px;
+        margin-top: 6px;
       }
 
       .progress-row {
-        grid-template-columns: 30px 1fr 30px;
-        gap: 6px;
-      }
-
-      .time {
-        font-size: 8px;
-      }
-
-      input[type="range"] {
-        height: 5px;
+        grid-template-columns: 27px minmax(0, 1fr) 27px;
+        gap: 5px;
       }
     }
 
-    @media (max-width: 680px) and (min-height: 261px) {
+    /*
+      Very short visual container fallback.
+      This still exists, but the base layout is already compact,
+      so it does not depend on this triggering.
+    */
+    @media (max-height: 170px) {
+      :root {
+        --cover-size: 58px;
+      }
+
       body {
-        padding: 8px;
+        padding: 4px;
       }
 
       .spotify-app {
-        border-radius: 22px;
-        padding: 12px;
+        grid-template-rows: 24px minmax(0, 1fr);
+        padding: 6px;
+        gap: 4px;
+        border-radius: 16px;
+      }
+
+      .topbar {
+        height: 24px;
+      }
+
+      .brand-mark {
+        width: 18px;
+        height: 18px;
+      }
+
+      .brand-title {
+        font-size: 10px;
       }
 
       .main {
-        grid-template-columns: 1fr;
-        justify-items: center;
-        text-align: center;
-        padding: 16px;
+        padding: 7px;
+        gap: 8px;
+        border-radius: 13px;
       }
 
-      .cover {
-        width: 145px;
-        height: 145px;
-      }
-
-      .status-pill {
+      .state-line {
         display: none;
       }
 
       .title {
-        font-size: 20px;
+        font-size: 12px;
+        -webkit-line-clamp: 1;
+      }
+
+      .artist {
+        font-size: 9px;
+      }
+
+      .progress-wrap {
+        margin-top: 5px;
+      }
+
+      .time {
+        font-size: 7px;
+      }
+
+      input[type="range"] {
+        height: 4px;
       }
     }
   </style>
@@ -572,14 +504,9 @@
   </div>
 
   <script>
-    /******************************************************************
-     * CONFIG
-     ******************************************************************/
-
     const DEBUG = false;
 
     const SPOTIFY_CLIENT_ID = 'ebf76017bcc54b1aaca01ed3fa4c161d';
-
     const REDIRECT_URI = 'https://billylu24.github.io/spotifypageGIAOK/';
 
     const SPOTIFY_SCOPES = [
@@ -592,10 +519,6 @@
     const AUTH_KEY = 'p3r_spotify_status_auth_v2';
     const VERIFIER_KEY = 'p3r_spotify_status_verifier_v2';
     const STATE_KEY = 'p3r_spotify_status_state_v2';
-
-    /******************************************************************
-     * DOM
-     ******************************************************************/
 
     const els = {
       subtitle: document.getElementById('subtitle'),
@@ -614,10 +537,6 @@
       durationTime: document.getElementById('duration-time')
     };
 
-    /******************************************************************
-     * STATE
-     ******************************************************************/
-
     let pollTimer = null;
     let tickerTimer = null;
 
@@ -625,10 +544,6 @@
     let progressBase = 0;
     let progressDuration = 0;
     let progressStartedAt = 0;
-
-    /******************************************************************
-     * LOGGING
-     ******************************************************************/
 
     function debug(message, type = 'info', data = undefined) {
       if (!DEBUG) return;
@@ -654,10 +569,6 @@
       debug(`SUBTITLE: ${text}`);
     }
 
-    /******************************************************************
-     * AUTH STORAGE
-     ******************************************************************/
-
     function getAuth() {
       try {
         return JSON.parse(localStorage.getItem(AUTH_KEY) || 'null');
@@ -669,24 +580,13 @@
 
     function saveAuth(auth) {
       localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
-
-      debug('Saved auth tokens to localStorage', 'ok', {
-        hasAccessToken: !!auth.access_token,
-        hasRefreshToken: !!auth.refresh_token,
-        expiresAt: new Date(auth.expires_at).toISOString()
-      });
     }
 
     function clearAuth() {
       localStorage.removeItem(AUTH_KEY);
       sessionStorage.removeItem(VERIFIER_KEY);
       sessionStorage.removeItem(STATE_KEY);
-      debug('Cleared auth/session storage', 'warn');
     }
-
-    /******************************************************************
-     * PKCE HELPERS
-     ******************************************************************/
 
     function randomString(len = 64) {
       const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
@@ -712,13 +612,7 @@
         .replace(/=+$/g, '');
     }
 
-    /******************************************************************
-     * SPOTIFY AUTH
-     ******************************************************************/
-
     async function loginSpotify() {
-      debug('Starting Spotify PKCE login');
-
       const verifier = randomString(96);
       const state = randomString(24);
       const challenge = base64UrlEncode(await sha256(verifier));
@@ -747,13 +641,6 @@
       const code = params.get('code');
       const error = params.get('error');
       const state = params.get('state');
-
-      debug('Checking auth callback', 'info', {
-        hasCode: !!code,
-        error,
-        returnedState: state,
-        currentUrl: window.location.href
-      });
 
       if (error) {
         throw new Error(`Spotify auth error: ${error}`);
@@ -875,10 +762,6 @@
       return refreshAccessToken();
     }
 
-    /******************************************************************
-     * SPOTIFY API
-     ******************************************************************/
-
     async function spotifyFetch(path, options = {}) {
       const token = await getValidAccessToken();
 
@@ -967,10 +850,6 @@
 
       renderIdle();
     }
-
-    /******************************************************************
-     * RENDER
-     ******************************************************************/
 
     function formatMs(ms) {
       const totalSeconds = Math.max(0, Math.floor((ms || 0) / 1000));
@@ -1087,10 +966,6 @@
       els.logoutBtn.style.display = 'none';
     }
 
-    /******************************************************************
-     * EVENTS
-     ******************************************************************/
-
     els.loginBtn.addEventListener('click', () => {
       loginSpotify().catch((err) => {
         console.error('[Spotify Status] Login failed:', err);
@@ -1127,10 +1002,6 @@
         });
       }
     });
-
-    /******************************************************************
-     * INIT
-     ******************************************************************/
 
     (async function init() {
       try {
