@@ -47,7 +47,7 @@
       border-radius: 28px;
       box-shadow: var(--shadow);
       display: grid;
-      grid-template-rows: auto 1fr auto;
+      grid-template-rows: auto 1fr;
       gap: 10px;
       padding: 14px;
       overflow: hidden;
@@ -282,55 +282,29 @@
       border: none;
     }
 
-    .debug-shell {
-      height: 150px;
-      background: rgba(255, 255, 255, 0.22);
-      border: 1px solid rgba(255, 255, 255, 0.26);
-      border-radius: 18px;
-      overflow: hidden;
-      display: grid;
-      grid-template-rows: auto 1fr;
-    }
-
-    .debug-head {
-      height: 34px;
-      padding: 0 12px;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      font-size: 11px;
-      font-weight: 800;
-      color: var(--muted);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.22);
-    }
-
-    .debug-log {
-      overflow: auto;
-      padding: 10px 12px;
-      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
-      font-size: 10px;
-      line-height: 1.45;
-      color: rgba(53, 73, 92, 0.92);
-      white-space: pre-wrap;
-    }
-
-    .debug-log .ok {
-      color: rgba(20, 135, 70, 1);
-    }
-
-    .debug-log .warn {
-      color: rgba(180, 120, 30, 1);
-    }
-
-    .debug-log .err {
-      color: rgba(180, 55, 55, 1);
+    input[type="range"]::-moz-range-thumb {
+      width: 12px;
+      height: 12px;
+      border-radius: 999px;
+      background: rgba(68, 138, 220, 1);
+      border: none;
     }
 
     @media (max-width: 680px) {
+      body {
+        padding: 8px;
+      }
+
+      .spotify-app {
+        border-radius: 22px;
+        padding: 12px;
+      }
+
       .main {
         grid-template-columns: 1fr;
         justify-items: center;
         text-align: center;
+        padding: 16px;
       }
 
       .cover {
@@ -340,6 +314,10 @@
 
       .status-pill {
         display: none;
+      }
+
+      .title {
+        font-size: 20px;
       }
     }
   </style>
@@ -392,14 +370,6 @@
         </div>
       </div>
     </div>
-
-    <div class="debug-shell">
-      <div class="debug-head">
-        <span>Debug Output</span>
-        <button class="btn ghost" id="clear-debug-btn" type="button" style="height: 24px; font-size: 10px;">Clear</button>
-      </div>
-      <div class="debug-log" id="debug-log"></div>
-    </div>
   </div>
 
   <script>
@@ -407,13 +377,12 @@
      * CONFIG
      ******************************************************************/
 
+    const DEBUG = false;
+
     const SPOTIFY_CLIENT_ID = 'ebf76017bcc54b1aaca01ed3fa4c161d';
 
-    // Must exactly match Spotify Dashboard redirect URI.
-    // Your GitHub Pages URL should include the trailing slash.
     const REDIRECT_URI = 'https://billylu24.github.io/spotifypageGIAOK/';
 
-    // Status-only scopes. No playback control, no playlists, no albums.
     const SPOTIFY_SCOPES = [
       'user-read-email',
       'user-read-private',
@@ -435,7 +404,6 @@
       loginBtn: document.getElementById('login-btn'),
       refreshBtn: document.getElementById('refresh-btn'),
       logoutBtn: document.getElementById('logout-btn'),
-      clearDebugBtn: document.getElementById('clear-debug-btn'),
 
       cover: document.getElementById('cover'),
       stateLine: document.getElementById('state-line'),
@@ -444,9 +412,7 @@
       album: document.getElementById('track-album'),
       progress: document.getElementById('progress'),
       currentTime: document.getElementById('current-time'),
-      durationTime: document.getElementById('duration-time'),
-
-      debugLog: document.getElementById('debug-log')
+      durationTime: document.getElementById('duration-time')
     };
 
     /******************************************************************
@@ -462,16 +428,13 @@
     let progressStartedAt = 0;
 
     /******************************************************************
-     * DEBUG
+     * LOGGING
      ******************************************************************/
 
-    function nowStamp() {
-      return new Date().toLocaleTimeString();
-    }
-
     function debug(message, type = 'info', data = undefined) {
-      const prefix = `[${nowStamp()}]`;
-      const line = `${prefix} ${message}`;
+      if (!DEBUG) return;
+
+      const line = `[Spotify Status] ${message}`;
 
       if (type === 'error') {
         console.error(line, data ?? '');
@@ -479,23 +442,6 @@
         console.warn(line, data ?? '');
       } else {
         console.log(line, data ?? '');
-      }
-
-      const div = document.createElement('div');
-      div.className = type === 'error' ? 'err' : type === 'warn' ? 'warn' : type === 'ok' ? 'ok' : '';
-      div.textContent = data === undefined
-        ? line
-        : `${line}\n${safeStringify(data)}`;
-
-      els.debugLog.appendChild(div);
-      els.debugLog.scrollTop = els.debugLog.scrollHeight;
-    }
-
-    function safeStringify(value) {
-      try {
-        return JSON.stringify(value, null, 2);
-      } catch {
-        return String(value);
       }
     }
 
@@ -524,6 +470,7 @@
 
     function saveAuth(auth) {
       localStorage.setItem(AUTH_KEY, JSON.stringify(auth));
+
       debug('Saved auth tokens to localStorage', 'ok', {
         hasAccessToken: !!auth.access_token,
         hasRefreshToken: !!auth.refresh_token,
@@ -567,7 +514,7 @@
     }
 
     /******************************************************************
-     * SPOTIFY LOGIN
+     * SPOTIFY AUTH
      ******************************************************************/
 
     async function loginSpotify() {
@@ -580,14 +527,8 @@
       sessionStorage.setItem(VERIFIER_KEY, verifier);
       sessionStorage.setItem(STATE_KEY, state);
 
-      debug('Generated PKCE verifier/state', 'ok', {
-        verifierLength: verifier.length,
-        state,
-        redirectUri: REDIRECT_URI,
-        scopes: SPOTIFY_SCOPES
-      });
-
       const authUrl = new URL('https://accounts.spotify.com/authorize');
+
       authUrl.search = new URLSearchParams({
         client_id: SPOTIFY_CLIENT_ID,
         response_type: 'code',
@@ -598,12 +539,12 @@
         state
       }).toString();
 
-      debug('Redirecting to Spotify authorize URL');
       window.location.href = authUrl.toString();
     }
 
     async function handleAuthCallback() {
       const params = new URLSearchParams(window.location.search);
+
       const code = params.get('code');
       const error = params.get('error');
       const state = params.get('state');
@@ -620,18 +561,11 @@
       }
 
       if (!code) {
-        debug('No auth code in URL. Not a callback.');
         return false;
       }
 
       const expectedState = sessionStorage.getItem(STATE_KEY);
       const verifier = sessionStorage.getItem(VERIFIER_KEY);
-
-      debug('Callback state/verifier check', 'info', {
-        expectedState,
-        returnedState: state,
-        hasVerifier: !!verifier
-      });
 
       if (!state || state !== expectedState) {
         throw new Error('State mismatch. Session storage may have been lost.');
@@ -644,14 +578,11 @@
       await exchangeCodeForToken(code, verifier);
 
       history.replaceState({}, '', REDIRECT_URI);
-      debug('Cleaned callback URL with history.replaceState', 'ok');
 
       return true;
     }
 
     async function exchangeCodeForToken(code, verifier) {
-      debug('Exchanging authorization code for token');
-
       const body = new URLSearchParams({
         client_id: SPOTIFY_CLIENT_ID,
         grant_type: 'authorization_code',
@@ -668,15 +599,14 @@
         body
       });
 
-      debug(`Token exchange response: HTTP ${res.status}`);
+      const text = await res.text();
 
       if (!res.ok) {
-        const text = await res.text();
-        debug('Token exchange failed body', 'error', text);
+        console.error('[Spotify Status] Token exchange failed:', res.status, text);
         throw new Error(`Token exchange failed: HTTP ${res.status}`);
       }
 
-      const json = await res.json();
+      const json = JSON.parse(text);
 
       saveAuth({
         access_token: json.access_token,
@@ -687,12 +617,6 @@
 
       sessionStorage.removeItem(VERIFIER_KEY);
       sessionStorage.removeItem(STATE_KEY);
-
-      debug('Token exchange succeeded', 'ok', {
-        tokenType: json.token_type,
-        expiresIn: json.expires_in,
-        scope: json.scope
-      });
     }
 
     async function refreshAccessToken() {
@@ -701,8 +625,6 @@
       if (!auth?.refresh_token) {
         throw new Error('No refresh token available');
       }
-
-      debug('Refreshing Spotify access token');
 
       const body = new URLSearchParams({
         client_id: SPOTIFY_CLIENT_ID,
@@ -718,16 +640,15 @@
         body
       });
 
-      debug(`Refresh token response: HTTP ${res.status}`);
+      const text = await res.text();
 
       if (!res.ok) {
-        const text = await res.text();
-        debug('Refresh failed body', 'error', text);
+        console.error('[Spotify Status] Refresh failed:', res.status, text);
         clearAuth();
         throw new Error(`Refresh failed: HTTP ${res.status}`);
       }
 
-      const json = await res.json();
+      const json = JSON.parse(text);
 
       const next = {
         access_token: json.access_token,
@@ -737,7 +658,6 @@
       };
 
       saveAuth(next);
-      debug('Access token refreshed', 'ok');
 
       return next.access_token;
     }
@@ -748,12 +668,6 @@
       if (!auth?.access_token) {
         throw new Error('Not authenticated. No access token in localStorage.');
       }
-
-      debug('Checking token expiry', 'info', {
-        expiresAt: new Date(auth.expires_at).toISOString(),
-        now: new Date().toISOString(),
-        expired: Date.now() >= auth.expires_at
-      });
 
       if (Date.now() < auth.expires_at) {
         return auth.access_token;
@@ -769,8 +683,6 @@
     async function spotifyFetch(path, options = {}) {
       const token = await getValidAccessToken();
 
-      debug(`Spotify fetch: GET ${path}`);
-
       const res = await fetch(`https://api.spotify.com/v1${path}`, {
         ...options,
         headers: {
@@ -779,18 +691,15 @@
         }
       });
 
-      debug(`Spotify API response for ${path}: HTTP ${res.status}`);
-
       if (res.status === 204) {
-        debug(`${path} returned 204 No Content`, 'warn');
         return null;
       }
 
       if (res.status === 401) {
-        debug(`${path} returned 401. Trying token refresh once.`, 'warn');
         await refreshAccessToken();
 
         const retryToken = await getValidAccessToken();
+
         const retry = await fetch(`https://api.spotify.com/v1${path}`, {
           ...options,
           headers: {
@@ -799,15 +708,13 @@
           }
         });
 
-        debug(`Retry response for ${path}: HTTP ${retry.status}`);
-
         if (retry.status === 204) {
           return null;
         }
 
         if (!retry.ok) {
           const text = await retry.text();
-          debug(`Retry failed body for ${path}`, 'error', text);
+          console.error('[Spotify Status] Spotify API retry failed:', retry.status, text);
           throw new Error(`Spotify API retry failed: HTTP ${retry.status}`);
         }
 
@@ -816,7 +723,7 @@
 
       if (!res.ok) {
         const text = await res.text();
-        debug(`Spotify API error body for ${path}`, 'error', text);
+        console.error('[Spotify Status] Spotify API failed:', path, res.status, text);
         throw new Error(`Spotify API error for ${path}: HTTP ${res.status}`);
       }
 
@@ -824,16 +731,7 @@
     }
 
     async function verifyProfile() {
-      debug('Verifying login with /me');
       const profile = await spotifyFetch('/me');
-
-      debug('/me profile result', 'ok', {
-        id: profile.id,
-        display_name: profile.display_name,
-        email: profile.email,
-        country: profile.country,
-        product: profile.product
-      });
 
       setStatus('Connected');
       setSubtitle(`Logged in as ${profile.display_name || profile.id}`);
@@ -842,15 +740,12 @@
     }
 
     async function fetchPlaybackStatus() {
-      debug('Fetching playback status');
-
       let playback = null;
 
       try {
         playback = await spotifyFetch('/me/player');
-        debug('/me/player result', playback ? 'ok' : 'warn', summarizePlayback(playback));
       } catch (err) {
-        debug('/me/player failed', 'error', err.message);
+        console.warn('[Spotify Status] /me/player failed:', err.message);
       }
 
       if (playback?.item) {
@@ -858,15 +753,12 @@
         return;
       }
 
-      debug('Trying fallback endpoint: /me/player/currently-playing');
-
       let currentlyPlaying = null;
 
       try {
         currentlyPlaying = await spotifyFetch('/me/player/currently-playing');
-        debug('/me/player/currently-playing result', currentlyPlaying ? 'ok' : 'warn', summarizePlayback(currentlyPlaying));
       } catch (err) {
-        debug('/me/player/currently-playing failed', 'error', err.message);
+        console.warn('[Spotify Status] /me/player/currently-playing failed:', err.message);
       }
 
       if (currentlyPlaying?.item) {
@@ -875,33 +767,6 @@
       }
 
       renderIdle();
-    }
-
-    function summarizePlayback(data) {
-      if (!data) {
-        return {
-          result: 'No data / 204 No Content',
-          meaning: 'Spotify says there is no active playback context right now.'
-        };
-      }
-
-      return {
-        is_playing: data.is_playing,
-        progress_ms: data.progress_ms,
-        item_type: data.currently_playing_type,
-        has_item: !!data.item,
-        track: data.item?.name,
-        artists: data.item?.artists?.map((a) => a.name).join(', '),
-        album: data.item?.album?.name,
-        device: data.device
-          ? {
-              name: data.device.name,
-              type: data.device.type,
-              is_active: data.device.is_active,
-              volume_percent: data.device.volume_percent
-            }
-          : null
-      };
     }
 
     /******************************************************************
@@ -926,8 +791,6 @@
     }
 
     function renderIdle() {
-      debug('Rendering idle state', 'warn');
-
       isPlaying = false;
       progressBase = 0;
       progressDuration = 0;
@@ -955,8 +818,6 @@
         return;
       }
 
-      debug(`Rendering playback from ${source}`, 'ok', summarizePlayback(data));
-
       const artists = Array.isArray(item.artists)
         ? item.artists.map((a) => a.name).join(', ')
         : 'Unknown artist';
@@ -978,6 +839,7 @@
         els.cover.src = image;
         els.cover.classList.add('ready');
       } else {
+        els.cover.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
         els.cover.classList.remove('ready');
       }
 
@@ -998,8 +860,6 @@
         const estimatedPosition = progressBase + (Date.now() - progressStartedAt);
         updateProgressUi(estimatedPosition, progressDuration);
       }, 250);
-
-      debug('Started local progress ticker', 'ok');
     }
 
     function startPolling() {
@@ -1009,13 +869,11 @@
 
       pollTimer = setInterval(() => {
         fetchPlaybackStatus().catch((err) => {
-          debug('Polling failed', 'error', err.message);
+          console.warn('[Spotify Status] Polling failed:', err.message);
           setStatus('Poll error');
           setSubtitle(err.message);
         });
       }, 5000);
-
-      debug('Started Spotify polling every 5s', 'ok');
     }
 
     function showLoggedInButtons() {
@@ -1036,7 +894,7 @@
 
     els.loginBtn.addEventListener('click', () => {
       loginSpotify().catch((err) => {
-        debug('Login failed before redirect', 'error', err.message);
+        console.error('[Spotify Status] Login failed:', err);
         setStatus('Login failed');
         setSubtitle(err.message);
       });
@@ -1044,7 +902,7 @@
 
     els.refreshBtn.addEventListener('click', () => {
       fetchPlaybackStatus().catch((err) => {
-        debug('Manual refresh failed', 'error', err.message);
+        console.error('[Spotify Status] Manual refresh failed:', err);
         setStatus('Refresh failed');
         setSubtitle(err.message);
       });
@@ -1055,25 +913,18 @@
       location.href = REDIRECT_URI;
     });
 
-    els.clearDebugBtn.addEventListener('click', () => {
-      els.debugLog.innerHTML = '';
-      debug('Debug log cleared');
-    });
-
     document.addEventListener('visibilitychange', () => {
       if (!document.hidden && getAuth()) {
-        debug('Page became visible. Refreshing playback.');
         fetchPlaybackStatus().catch((err) => {
-          debug('Visibility refresh failed', 'error', err.message);
+          console.warn('[Spotify Status] Visibility refresh failed:', err.message);
         });
       }
     });
 
     window.addEventListener('focus', () => {
       if (getAuth()) {
-        debug('Window focused. Refreshing playback.');
         fetchPlaybackStatus().catch((err) => {
-          debug('Focus refresh failed', 'error', err.message);
+          console.warn('[Spotify Status] Focus refresh failed:', err.message);
         });
       }
     });
@@ -1084,26 +935,12 @@
 
     (async function init() {
       try {
-        debug('App init started', 'ok', {
-          redirectUri: REDIRECT_URI,
-          scopes: SPOTIFY_SCOPES,
-          currentUrl: window.location.href
-        });
-
         setStatus('Checking auth');
         setSubtitle('Checking Spotify login state');
 
         await handleAuthCallback();
 
         const auth = getAuth();
-
-        debug('Auth after callback check', 'info', {
-          hasAuth: !!auth,
-          hasAccessToken: !!auth?.access_token,
-          hasRefreshToken: !!auth?.refresh_token,
-          expiresAt: auth?.expires_at ? new Date(auth.expires_at).toISOString() : null,
-          scope: auth?.scope
-        });
 
         if (!auth?.access_token) {
           showLoggedOutButtons();
@@ -1128,19 +965,16 @@
         startTicker();
         startPolling();
       } catch (err) {
-        debug('Init failed', 'error', {
-          message: err.message,
-          stack: err.stack
-        });
+        console.error('[Spotify Status] Init failed:', err);
 
         showLoggedOutButtons();
 
         setStatus('Init failed');
-        setSubtitle(err.message || 'Check debug output');
+        setSubtitle(err.message || 'Check console');
 
         els.stateLine.textContent = 'Error';
         els.title.textContent = 'Failed to initialize';
-        els.artist.textContent = err.message || 'Check debug output.';
+        els.artist.textContent = err.message || 'Check console.';
         els.album.textContent = '';
       }
     })();
