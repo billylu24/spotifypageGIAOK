@@ -8,16 +8,26 @@
 
   <style>
     :root {
-      --bg: rgba(182, 220, 255, 0.92);
-      --panel: rgba(231, 242, 255, 0.68);
-      --line: rgba(255, 255, 255, 0.34);
-      --text: rgba(53, 73, 92, 0.98);
-      --muted: rgba(79, 96, 114, 0.82);
+      --bg: rgba(182, 220, 255, 0.90);
+      --bg-glow-a: rgba(255, 255, 255, 0.38);
+      --bg-glow-b: rgba(113, 184, 255, 0.28);
+
+      --panel: rgba(237, 247, 255, 0.66);
+      --panel-strong: rgba(255, 255, 255, 0.30);
+      --line: rgba(255, 255, 255, 0.42);
+
+      --text: rgba(38, 58, 78, 0.98);
+      --muted: rgba(74, 95, 115, 0.78);
+
       --accent: #1ed760;
-      --btn: rgba(86, 156, 234, 0.82);
-      --btn-hover: rgba(68, 138, 220, 0.95);
+      --accent-soft: rgba(30, 215, 96, 0.28);
+
+      --btn: rgba(78, 151, 236, 0.84);
+      --btn-hover: rgba(61, 132, 220, 0.98);
       --danger: rgba(220, 80, 80, 0.9);
-      --shadow: 0 8px 18px rgba(0, 0, 0, 0.10);
+
+      --shadow: 0 14px 30px rgba(22, 60, 100, 0.16);
+      --inner-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
 
       --cover-size: 82px;
     }
@@ -48,10 +58,17 @@
       min-width: 0;
       min-height: 0;
 
-      background: var(--bg);
+      position: relative;
+      isolation: isolate;
+
+      background:
+        radial-gradient(circle at 16% 8%, var(--bg-glow-a), transparent 36%),
+        radial-gradient(circle at 92% 85%, var(--bg-glow-b), transparent 42%),
+        linear-gradient(145deg, rgba(228, 244, 255, 0.92), var(--bg));
+
       border: 1px solid var(--line);
       border-radius: 20px;
-      box-shadow: var(--shadow);
+      box-shadow: var(--shadow), var(--inner-shadow);
 
       display: grid;
       grid-template-rows: 28px minmax(0, 1fr);
@@ -59,6 +76,36 @@
 
       padding: 8px;
       overflow: hidden;
+      backdrop-filter: blur(16px) saturate(1.22);
+      -webkit-backdrop-filter: blur(16px) saturate(1.22);
+    }
+
+    .spotify-app::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      pointer-events: none;
+      background:
+        linear-gradient(
+          115deg,
+          rgba(255, 255, 255, 0.30),
+          transparent 34%,
+          rgba(255, 255, 255, 0.10) 62%,
+          transparent
+        );
+    }
+
+    .spotify-app::after {
+      content: "";
+      position: absolute;
+      left: 12px;
+      right: 12px;
+      top: 0;
+      height: 1px;
+      background: rgba(255, 255, 255, 0.72);
+      opacity: 0.8;
+      pointer-events: none;
     }
 
     .topbar {
@@ -84,9 +131,14 @@
       width: 22px;
       height: 22px;
       border-radius: 999px;
-      background: var(--accent);
+      background:
+        radial-gradient(circle at 32% 26%, rgba(255, 255, 255, 0.65), transparent 30%),
+        linear-gradient(145deg, #26ef75, var(--accent));
       position: relative;
       flex: 0 0 auto;
+      box-shadow:
+        0 5px 12px rgba(30, 215, 96, 0.34),
+        inset 0 1px 0 rgba(255, 255, 255, 0.35);
     }
 
     .brand-mark span {
@@ -96,6 +148,7 @@
       height: 8%;
       border-radius: 999px;
       background: white;
+      box-shadow: 0 0 6px rgba(255, 255, 255, 0.45);
     }
 
     .brand-mark span:nth-child(1) {
@@ -126,11 +179,13 @@
 
     .brand-title {
       font-size: 11px;
-      font-weight: 800;
+      font-weight: 900;
       line-height: 1;
+      letter-spacing: 0.02em;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.42);
     }
 
     .brand-subtitle {
@@ -149,15 +204,21 @@
       height: 22px;
       padding: 0 7px;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.24);
+
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.20));
+      border: 1px solid rgba(255, 255, 255, 0.38);
+
       color: var(--muted);
       font-size: 9px;
-      font-weight: 700;
+      font-weight: 800;
 
       display: inline-flex;
       align-items: center;
       justify-content: center;
       white-space: nowrap;
+
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
     }
 
     .btn {
@@ -166,37 +227,66 @@
       border: none;
       border-radius: 8px;
 
-      background: var(--btn);
+      background:
+        linear-gradient(180deg, rgba(103, 173, 246, 0.96), var(--btn));
       color: white;
 
       font-size: 9px;
-      font-weight: 800;
+      font-weight: 900;
       cursor: pointer;
 
-      transition: 0.15s ease;
+      transition:
+        transform 0.15s ease,
+        background 0.15s ease,
+        box-shadow 0.15s ease,
+        opacity 0.15s ease;
+
       white-space: nowrap;
+      box-shadow:
+        0 4px 10px rgba(55, 130, 210, 0.20),
+        inset 0 1px 0 rgba(255, 255, 255, 0.38);
     }
 
     .btn:hover {
-      background: var(--btn-hover);
+      background:
+        linear-gradient(180deg, rgba(92, 160, 238, 1), var(--btn-hover));
       transform: translateY(-1px);
+      box-shadow:
+        0 7px 14px rgba(55, 130, 210, 0.25),
+        inset 0 1px 0 rgba(255, 255, 255, 0.42);
+    }
+
+    .btn:active {
+      transform: translateY(0);
+      opacity: 0.92;
     }
 
     .btn.ghost {
-      background: rgba(255, 255, 255, 0.22);
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.20));
       color: var(--text);
+      border: 1px solid rgba(255, 255, 255, 0.32);
+    }
+
+    .btn.ghost:hover {
+      background:
+        linear-gradient(180deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.26));
     }
 
     .btn.danger {
-      background: var(--danger);
+      background:
+        linear-gradient(180deg, rgba(235, 105, 105, 0.96), var(--danger));
     }
 
     .main {
       min-width: 0;
       min-height: 0;
 
-      background: var(--panel);
-      border: 1px solid rgba(255, 255, 255, 0.26);
+      position: relative;
+
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.54), var(--panel));
+      border: 1px solid rgba(255, 255, 255, 0.38);
       border-radius: 16px;
 
       display: grid;
@@ -206,6 +296,21 @@
 
       padding: 10px;
       overflow: hidden;
+
+      box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.58),
+        0 7px 18px rgba(33, 76, 120, 0.10);
+    }
+
+    .main::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background:
+        radial-gradient(circle at 12% 20%, rgba(255, 255, 255, 0.42), transparent 36%),
+        radial-gradient(circle at 100% 100%, rgba(30, 215, 96, 0.10), transparent 42%);
+      opacity: 0.95;
     }
 
     .cover {
@@ -213,26 +318,45 @@
       height: var(--cover-size);
       border-radius: 13px;
 
+      position: relative;
+      z-index: 1;
+
       object-fit: cover;
-      background: rgba(255, 255, 255, 0.26);
-      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+      background:
+        linear-gradient(145deg, rgba(255, 255, 255, 0.38), rgba(202, 226, 247, 0.42));
+
+      box-shadow:
+        0 9px 20px rgba(17, 52, 88, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.38);
 
       opacity: 0;
-      transition: opacity 0.2s ease;
+      transition:
+        opacity 0.2s ease,
+        transform 0.18s ease,
+        box-shadow 0.18s ease;
     }
 
     .cover.ready {
       opacity: 1;
     }
 
+    .spotify-app.is-playing .cover.ready {
+      box-shadow:
+        0 10px 24px rgba(17, 52, 88, 0.20),
+        0 0 0 1px rgba(255, 255, 255, 0.30),
+        0 0 18px rgba(30, 215, 96, 0.16);
+    }
+
     .track {
       min-width: 0;
       overflow: hidden;
+      position: relative;
+      z-index: 1;
     }
 
     .state-line {
       font-size: 9px;
-      font-weight: 800;
+      font-weight: 900;
       line-height: 1;
       color: var(--muted);
       margin-bottom: 5px;
@@ -240,12 +364,15 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      letter-spacing: 0.04em;
+      text-transform: uppercase;
     }
 
     .title {
       font-size: 15px;
-      font-weight: 900;
+      font-weight: 950;
       line-height: 1.08;
+      letter-spacing: -0.015em;
 
       display: -webkit-box;
       -webkit-line-clamp: 2;
@@ -253,6 +380,7 @@
 
       overflow: hidden;
       word-break: break-word;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.42);
     }
 
     .artist {
@@ -260,6 +388,7 @@
       font-size: 11px;
       line-height: 1.15;
       color: var(--muted);
+      font-weight: 650;
 
       white-space: nowrap;
       overflow: hidden;
@@ -270,8 +399,71 @@
       display: none;
     }
 
+    .beat-visualizer {
+      margin-top: 7px;
+      height: 18px;
+      width: 100%;
+
+      display: flex;
+      align-items: center;
+      gap: 3px;
+
+      overflow: hidden;
+      opacity: 0.95;
+    }
+
+    .beat-bar {
+      width: 3px;
+      height: 7px;
+      flex: 0 0 3px;
+
+      border-radius: 999px;
+      background:
+        linear-gradient(180deg, rgba(30, 215, 96, 0.95), rgba(61, 132, 220, 0.72));
+      box-shadow:
+        0 0 8px rgba(30, 215, 96, 0.18),
+        inset 0 1px 0 rgba(255, 255, 255, 0.42);
+
+      transform-origin: center;
+      animation: beatIdle 1.6s ease-in-out infinite;
+    }
+
+    .beat-bar:nth-child(1) { animation-delay: -0.10s; }
+    .beat-bar:nth-child(2) { animation-delay: -0.32s; }
+    .beat-bar:nth-child(3) { animation-delay: -0.54s; }
+    .beat-bar:nth-child(4) { animation-delay: -0.18s; }
+    .beat-bar:nth-child(5) { animation-delay: -0.42s; }
+    .beat-bar:nth-child(6) { animation-delay: -0.68s; }
+    .beat-bar:nth-child(7) { animation-delay: -0.24s; }
+    .beat-bar:nth-child(8) { animation-delay: -0.48s; }
+    .beat-bar:nth-child(9) { animation-delay: -0.74s; }
+    .beat-bar:nth-child(10) { animation-delay: -0.28s; }
+    .beat-bar:nth-child(11) { animation-delay: -0.58s; }
+    .beat-bar:nth-child(12) { animation-delay: -0.80s; }
+    .beat-bar:nth-child(13) { animation-delay: -0.36s; }
+    .beat-bar:nth-child(14) { animation-delay: -0.64s; }
+    .beat-bar:nth-child(15) { animation-delay: -0.86s; }
+    .beat-bar:nth-child(16) { animation-delay: -0.44s; }
+
+    .spotify-app.is-playing .beat-bar {
+      animation-name: beatPlaying;
+      animation-duration: 0.74s;
+      animation-timing-function: cubic-bezier(0.22, 0.72, 0.22, 1);
+    }
+
+    .spotify-app.is-paused .beat-bar,
+    .spotify-app.is-idle .beat-bar,
+    .spotify-app.is-error .beat-bar {
+      animation-name: beatIdle;
+      animation-duration: 1.9s;
+      opacity: 0.45;
+      background:
+        linear-gradient(180deg, rgba(120, 160, 200, 0.65), rgba(90, 125, 160, 0.46));
+      box-shadow: none;
+    }
+
     .progress-wrap {
-      margin-top: 8px;
+      margin-top: 7px;
       width: 100%;
     }
 
@@ -288,6 +480,7 @@
       font-variant-numeric: tabular-nums;
       text-align: center;
       line-height: 1;
+      font-weight: 750;
     }
 
     input[type="range"] {
@@ -297,9 +490,14 @@
       width: 100%;
       height: 5px;
       border-radius: 999px;
-      background: rgba(255, 255, 255, 0.45);
+      background:
+        linear-gradient(90deg, rgba(30, 215, 96, 0.52), rgba(80, 150, 230, 0.40)),
+        rgba(255, 255, 255, 0.45);
 
       pointer-events: none;
+      box-shadow:
+        inset 0 1px 2px rgba(42, 75, 105, 0.08),
+        0 1px 0 rgba(255, 255, 255, 0.44);
     }
 
     input[type="range"]::-webkit-slider-thumb {
@@ -309,8 +507,13 @@
       width: 10px;
       height: 10px;
       border-radius: 999px;
-      background: rgba(68, 138, 220, 1);
+      background:
+        radial-gradient(circle at 30% 25%, rgba(255, 255, 255, 0.88), rgba(255, 255, 255, 0.16) 34%),
+        rgba(68, 138, 220, 1);
       border: none;
+      box-shadow:
+        0 1px 6px rgba(68, 138, 220, 0.45),
+        0 0 0 2px rgba(255, 255, 255, 0.42);
     }
 
     input[type="range"]::-moz-range-thumb {
@@ -319,6 +522,49 @@
       border-radius: 999px;
       background: rgba(68, 138, 220, 1);
       border: none;
+      box-shadow:
+        0 1px 6px rgba(68, 138, 220, 0.45),
+        0 0 0 2px rgba(255, 255, 255, 0.42);
+    }
+
+    @keyframes beatPlaying {
+      0% {
+        transform: scaleY(0.45);
+      }
+
+      16% {
+        transform: scaleY(1.65);
+      }
+
+      34% {
+        transform: scaleY(0.75);
+      }
+
+      52% {
+        transform: scaleY(1.28);
+      }
+
+      72% {
+        transform: scaleY(0.58);
+      }
+
+      100% {
+        transform: scaleY(0.45);
+      }
+    }
+
+    @keyframes beatIdle {
+      0% {
+        transform: scaleY(0.42);
+      }
+
+      50% {
+        transform: scaleY(0.78);
+      }
+
+      100% {
+        transform: scaleY(0.42);
+      }
     }
 
     /*
@@ -374,6 +620,17 @@
       .artist {
         font-size: 10px;
         margin-top: 4px;
+      }
+
+      .beat-visualizer {
+        height: 16px;
+        gap: 2px;
+        margin-top: 6px;
+      }
+
+      .beat-bar {
+        width: 2px;
+        flex-basis: 2px;
       }
 
       .progress-wrap {
@@ -439,6 +696,11 @@
         font-size: 9px;
       }
 
+      .beat-visualizer {
+        height: 13px;
+        margin-top: 4px;
+      }
+
       .progress-wrap {
         margin-top: 5px;
       }
@@ -451,11 +713,20 @@
         height: 4px;
       }
     }
+
+    @media (prefers-reduced-motion: reduce) {
+      .beat-bar,
+      .btn,
+      .cover {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
   </style>
 </head>
 
 <body>
-  <div class="spotify-app">
+  <div class="spotify-app is-idle" id="spotify-app">
     <div class="topbar">
       <div class="brand">
         <div class="brand-mark" aria-hidden="true">
@@ -492,6 +763,25 @@
         <div class="artist" id="track-artist">Connect Spotify first.</div>
         <div class="album" id="track-album"></div>
 
+        <div class="beat-visualizer" id="beat-visualizer" aria-hidden="true">
+          <span class="beat-bar"></span>
+          <span class="beat-bar"></span>
+          <span class="beat-bar"></span>
+          <span class="beat-bar"></span>
+          <span class="beat-bar"></span>
+          <span class="beat-bar"></span>
+          <span class="beat-bar"></span>
+          <span class="beat-bar"></span>
+          <span class="beat-bar"></span>
+          <span class="beat-bar"></span>
+          <span class="beat-bar"></span>
+          <span class="beat-bar"></span>
+          <span class="beat-bar"></span>
+          <span class="beat-bar"></span>
+          <span class="beat-bar"></span>
+          <span class="beat-bar"></span>
+        </div>
+
         <div class="progress-wrap">
           <div class="progress-row">
             <div class="time" id="current-time">0:00</div>
@@ -521,6 +811,8 @@
     const STATE_KEY = 'p3r_spotify_status_state_v2';
 
     const els = {
+      app: document.getElementById('spotify-app'),
+
       subtitle: document.getElementById('subtitle'),
       statusPill: document.getElementById('status-pill'),
       loginBtn: document.getElementById('login-btn'),
@@ -567,6 +859,20 @@
     function setSubtitle(text) {
       els.subtitle.textContent = text;
       debug(`SUBTITLE: ${text}`);
+    }
+
+    function setBeatState(state) {
+      els.app.classList.remove('is-playing', 'is-paused', 'is-idle', 'is-error');
+
+      if (state === 'playing') {
+        els.app.classList.add('is-playing');
+      } else if (state === 'paused') {
+        els.app.classList.add('is-paused');
+      } else if (state === 'error') {
+        els.app.classList.add('is-error');
+      } else {
+        els.app.classList.add('is-idle');
+      }
     }
 
     function getAuth() {
@@ -874,6 +1180,8 @@
       progressDuration = 0;
       progressStartedAt = Date.now();
 
+      setBeatState('idle');
+
       els.cover.src = 'data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=';
       els.cover.classList.remove('ready');
 
@@ -907,6 +1215,8 @@
       progressBase = data.progress_ms || 0;
       progressDuration = item.duration_ms || 0;
       progressStartedAt = Date.now();
+
+      setBeatState(isPlaying ? 'playing' : 'paused');
 
       els.stateLine.textContent = isPlaying ? 'Now playing' : 'Paused';
       els.title.textContent = item.name || 'Unknown track';
@@ -948,6 +1258,7 @@
       pollTimer = setInterval(() => {
         fetchPlaybackStatus().catch((err) => {
           console.warn('[Spotify Status] Polling failed:', err.message);
+          setBeatState('error');
           setStatus('Poll error');
           setSubtitle(err.message);
         });
@@ -969,6 +1280,7 @@
     els.loginBtn.addEventListener('click', () => {
       loginSpotify().catch((err) => {
         console.error('[Spotify Status] Login failed:', err);
+        setBeatState('error');
         setStatus('Login failed');
         setSubtitle(err.message);
       });
@@ -977,6 +1289,7 @@
     els.refreshBtn.addEventListener('click', () => {
       fetchPlaybackStatus().catch((err) => {
         console.error('[Spotify Status] Manual refresh failed:', err);
+        setBeatState('error');
         setStatus('Refresh failed');
         setSubtitle(err.message);
       });
@@ -1005,6 +1318,8 @@
 
     (async function init() {
       try {
+        setBeatState('idle');
+
         setStatus('Checking auth');
         setSubtitle('Checking Spotify login state');
 
@@ -1014,6 +1329,8 @@
 
         if (!auth?.access_token) {
           showLoggedOutButtons();
+
+          setBeatState('idle');
 
           setStatus('Not connected');
           setSubtitle('Connect Spotify to view current playback');
@@ -1038,6 +1355,8 @@
         console.error('[Spotify Status] Init failed:', err);
 
         showLoggedOutButtons();
+
+        setBeatState('error');
 
         setStatus('Init failed');
         setSubtitle(err.message || 'Check console');
