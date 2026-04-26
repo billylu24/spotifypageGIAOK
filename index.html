@@ -8,26 +8,26 @@
 
   <style>
     :root {
-      --bg: rgba(182, 220, 255, 0.90);
-      --bg-glow-a: rgba(255, 255, 255, 0.38);
-      --bg-glow-b: rgba(113, 184, 255, 0.28);
+      --bg: rgba(210, 232, 252, 0.97);
+      --bg-glow-a: rgba(255, 255, 255, 0.26);
+      --bg-glow-b: rgba(113, 184, 255, 0.16);
 
-      --panel: rgba(237, 247, 255, 0.66);
-      --panel-strong: rgba(255, 255, 255, 0.30);
-      --line: rgba(255, 255, 255, 0.42);
+      --panel: rgba(246, 251, 255, 0.92);
+      --panel-strong: rgba(255, 255, 255, 0.40);
+      --line: rgba(255, 255, 255, 0.52);
 
-      --text: rgba(38, 58, 78, 0.98);
-      --muted: rgba(74, 95, 115, 0.78);
+      --text: rgba(24, 42, 62, 1);
+      --muted: rgba(55, 74, 94, 0.92);
 
       --accent: #1ed760;
-      --accent-soft: rgba(30, 215, 96, 0.28);
+      --accent-soft: rgba(30, 215, 96, 0.22);
 
-      --btn: rgba(78, 151, 236, 0.84);
-      --btn-hover: rgba(61, 132, 220, 0.98);
-      --danger: rgba(220, 80, 80, 0.9);
+      --btn: rgba(78, 151, 236, 0.90);
+      --btn-hover: rgba(61, 132, 220, 1);
+      --danger: rgba(220, 80, 80, 0.94);
 
-      --shadow: 0 14px 30px rgba(22, 60, 100, 0.16);
-      --inner-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+      --shadow: 0 12px 24px rgba(22, 60, 100, 0.13);
+      --inner-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.62);
 
       --cover-size: 82px;
     }
@@ -64,7 +64,7 @@
       background:
         radial-gradient(circle at 16% 8%, var(--bg-glow-a), transparent 36%),
         radial-gradient(circle at 92% 85%, var(--bg-glow-b), transparent 42%),
-        linear-gradient(145deg, rgba(228, 244, 255, 0.92), var(--bg));
+        linear-gradient(145deg, rgba(228, 244, 255, 0.96), var(--bg));
 
       border: 1px solid var(--line);
       border-radius: 20px;
@@ -76,8 +76,9 @@
 
       padding: 8px;
       overflow: hidden;
-      backdrop-filter: blur(16px) saturate(1.22);
-      -webkit-backdrop-filter: blur(16px) saturate(1.22);
+
+      backdrop-filter: blur(6px) saturate(1.08);
+      -webkit-backdrop-filter: blur(6px) saturate(1.08);
     }
 
     .spotify-app::before {
@@ -89,9 +90,9 @@
       background:
         linear-gradient(
           115deg,
-          rgba(255, 255, 255, 0.30),
+          rgba(255, 255, 255, 0.18),
           transparent 34%,
-          rgba(255, 255, 255, 0.10) 62%,
+          rgba(255, 255, 255, 0.06) 62%,
           transparent
         );
     }
@@ -104,7 +105,7 @@
       top: 0;
       height: 1px;
       background: rgba(255, 255, 255, 0.72);
-      opacity: 0.8;
+      opacity: 0.75;
       pointer-events: none;
     }
 
@@ -137,7 +138,7 @@
       position: relative;
       flex: 0 0 auto;
       box-shadow:
-        0 5px 12px rgba(30, 215, 96, 0.34),
+        0 5px 12px rgba(30, 215, 96, 0.28),
         inset 0 1px 0 rgba(255, 255, 255, 0.35);
     }
 
@@ -148,7 +149,6 @@
       height: 8%;
       border-radius: 999px;
       background: white;
-      box-shadow: 0 0 6px rgba(255, 255, 255, 0.45);
     }
 
     .brand-mark span:nth-child(1) {
@@ -185,7 +185,7 @@
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
-      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.42);
+      text-shadow: none;
     }
 
     .brand-subtitle {
@@ -206,8 +206,8 @@
       border-radius: 999px;
 
       background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0.20));
-      border: 1px solid rgba(255, 255, 255, 0.38);
+        linear-gradient(180deg, rgba(255, 255, 255, 0.52), rgba(255, 255, 255, 0.28));
+      border: 1px solid rgba(255, 255, 255, 0.48);
 
       color: var(--muted);
       font-size: 9px;
@@ -218,7 +218,7 @@
       justify-content: center;
       white-space: nowrap;
 
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.45);
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.50);
     }
 
     .btn {
@@ -228,7 +228,7 @@
       border-radius: 8px;
 
       background:
-        linear-gradient(180deg, rgba(103, 173, 246, 0.96), var(--btn));
+        linear-gradient(180deg, rgba(103, 173, 246, 0.98), var(--btn));
       color: white;
 
       font-size: 9px;
@@ -243,7 +243,7 @@
 
       white-space: nowrap;
       box-shadow:
-        0 4px 10px rgba(55, 130, 210, 0.20),
+        0 4px 10px rgba(55, 130, 210, 0.18),
         inset 0 1px 0 rgba(255, 255, 255, 0.38);
     }
 
@@ -252,7 +252,7 @@
         linear-gradient(180deg, rgba(92, 160, 238, 1), var(--btn-hover));
       transform: translateY(-1px);
       box-shadow:
-        0 7px 14px rgba(55, 130, 210, 0.25),
+        0 7px 14px rgba(55, 130, 210, 0.22),
         inset 0 1px 0 rgba(255, 255, 255, 0.42);
     }
 
@@ -263,19 +263,19 @@
 
     .btn.ghost {
       background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.20));
+        linear-gradient(180deg, rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0.30));
       color: var(--text);
-      border: 1px solid rgba(255, 255, 255, 0.32);
+      border: 1px solid rgba(255, 255, 255, 0.44);
     }
 
     .btn.ghost:hover {
       background:
-        linear-gradient(180deg, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.26));
+        linear-gradient(180deg, rgba(255, 255, 255, 0.58), rgba(255, 255, 255, 0.36));
     }
 
     .btn.danger {
       background:
-        linear-gradient(180deg, rgba(235, 105, 105, 0.96), var(--danger));
+        linear-gradient(180deg, rgba(235, 105, 105, 0.98), var(--danger));
     }
 
     .main {
@@ -285,8 +285,8 @@
       position: relative;
 
       background:
-        linear-gradient(145deg, rgba(255, 255, 255, 0.54), var(--panel));
-      border: 1px solid rgba(255, 255, 255, 0.38);
+        linear-gradient(145deg, rgba(255, 255, 255, 0.72), var(--panel));
+      border: 1px solid rgba(255, 255, 255, 0.50);
       border-radius: 16px;
 
       display: grid;
@@ -298,8 +298,8 @@
       overflow: hidden;
 
       box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, 0.58),
-        0 7px 18px rgba(33, 76, 120, 0.10);
+        inset 0 1px 0 rgba(255, 255, 255, 0.64),
+        0 7px 18px rgba(33, 76, 120, 0.08);
     }
 
     .main::before {
@@ -308,9 +308,9 @@
       inset: 0;
       pointer-events: none;
       background:
-        radial-gradient(circle at 12% 20%, rgba(255, 255, 255, 0.42), transparent 36%),
-        radial-gradient(circle at 100% 100%, rgba(30, 215, 96, 0.10), transparent 42%);
-      opacity: 0.95;
+        radial-gradient(circle at 12% 20%, rgba(255, 255, 255, 0.24), transparent 36%),
+        radial-gradient(circle at 100% 100%, rgba(30, 215, 96, 0.06), transparent 42%);
+      opacity: 0.35;
     }
 
     .cover {
@@ -323,10 +323,10 @@
 
       object-fit: cover;
       background:
-        linear-gradient(145deg, rgba(255, 255, 255, 0.38), rgba(202, 226, 247, 0.42));
+        linear-gradient(145deg, rgba(255, 255, 255, 0.48), rgba(202, 226, 247, 0.48));
 
       box-shadow:
-        0 9px 20px rgba(17, 52, 88, 0.18),
+        0 9px 20px rgba(17, 52, 88, 0.16),
         inset 0 1px 0 rgba(255, 255, 255, 0.38);
 
       opacity: 0;
@@ -342,9 +342,9 @@
 
     .spotify-app.is-playing .cover.ready {
       box-shadow:
-        0 10px 24px rgba(17, 52, 88, 0.20),
-        0 0 0 1px rgba(255, 255, 255, 0.30),
-        0 0 18px rgba(30, 215, 96, 0.16);
+        0 10px 24px rgba(17, 52, 88, 0.18),
+        0 0 0 1px rgba(255, 255, 255, 0.34),
+        0 0 14px rgba(30, 215, 96, 0.13);
     }
 
     .track {
@@ -380,7 +380,7 @@
 
       overflow: hidden;
       word-break: break-word;
-      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.42);
+      text-shadow: none;
     }
 
     .artist {
@@ -421,7 +421,7 @@
       background:
         linear-gradient(180deg, rgba(30, 215, 96, 0.95), rgba(61, 132, 220, 0.72));
       box-shadow:
-        0 0 8px rgba(30, 215, 96, 0.18),
+        0 0 7px rgba(30, 215, 96, 0.14),
         inset 0 1px 0 rgba(255, 255, 255, 0.42);
 
       transform-origin: center;
@@ -491,8 +491,8 @@
       height: 5px;
       border-radius: 999px;
       background:
-        linear-gradient(90deg, rgba(30, 215, 96, 0.52), rgba(80, 150, 230, 0.40)),
-        rgba(255, 255, 255, 0.45);
+        linear-gradient(90deg, rgba(30, 215, 96, 0.50), rgba(80, 150, 230, 0.38)),
+        rgba(255, 255, 255, 0.58);
 
       pointer-events: none;
       box-shadow:
@@ -512,7 +512,7 @@
         rgba(68, 138, 220, 1);
       border: none;
       box-shadow:
-        0 1px 6px rgba(68, 138, 220, 0.45),
+        0 1px 6px rgba(68, 138, 220, 0.38),
         0 0 0 2px rgba(255, 255, 255, 0.42);
     }
 
@@ -523,7 +523,7 @@
       background: rgba(68, 138, 220, 1);
       border: none;
       box-shadow:
-        0 1px 6px rgba(68, 138, 220, 0.45),
+        0 1px 6px rgba(68, 138, 220, 0.38),
         0 0 0 2px rgba(255, 255, 255, 0.42);
     }
 
